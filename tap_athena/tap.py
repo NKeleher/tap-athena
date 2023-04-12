@@ -27,16 +27,15 @@ class TapAthena(Tap):
             return self.input_catalog.to_dict()
 
         return AthenaStream.run_discovery(
-            self.config,
-            schema_filter=[self.config["schema_name"]]
+            self.config, schema_filter=[self.config["schema_name"]]
         )
 
     def discover_streams(self) -> List[AthenaStream]:
         """Return a list of discovered streams."""
-        result: List[AthenaStream] = []
-        for catalog_entry in self.catalog_dict["streams"]:
-            result.append(AthenaStream(self, catalog_entry))
-
+        result: List[AthenaStream] = [
+            AthenaStream(self, catalog_entry)
+            for catalog_entry in self.catalog_dict["streams"]
+        ]
         return result
 
 

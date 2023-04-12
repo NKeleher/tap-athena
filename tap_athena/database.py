@@ -159,8 +159,10 @@ class SQLStream(Stream, metaclass=abc.ABCMeta):
         cls, tap_config: dict
     ) -> sqlalchemy.engine.Connection:
         """Return or set the SQLAlchemy connection object."""
-        return cls.get_sqlalchemy_engine(tap_config).connect().execution_options(
-            stream_results=True
+        return (
+            cls.get_sqlalchemy_engine(tap_config)
+            .connect()
+            .execution_options(stream_results=True)
         )
 
     @classmethod
@@ -207,14 +209,18 @@ class SQLStream(Stream, metaclass=abc.ABCMeta):
                 # inspected.reflect_table(table=table_obj)
                 possible_primary_keys: List[List[str]] = []
 
-                pk_def = inspected.get_pk_constraint(table_name, schema=schema_name)
-                if pk_def:
+                if pk_def := inspected.get_pk_constraint(
+                    table_name, schema=schema_name
+                ):
                     possible_primary_keys.append(pk_def)
 
-                for index_def in inspected.get_indexes(table_name, schema=schema_name):
-                    if index_def.get("unique", False):
-                        possible_primary_keys.append(index_def["column_names"])
-
+                possible_primary_keys.extend(
+                    index_def["column_names"]
+                    for index_def in inspected.get_indexes(
+                        table_name, schema=schema_name
+                    )
+                    if index_def.get("unique", False)
+                )
                 table_schema = th.PropertiesList()
                 for column_def in inspected.get_columns(table_name, schema=schema_name):
                     column_name = column_def["name"]

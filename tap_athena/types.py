@@ -1,4 +1,10 @@
-from singer_sdk.typing import DateTimeType, IntegerType, NumberType, StringType, BooleanType
+from singer_sdk.typing import (
+    DateTimeType,
+    IntegerType,
+    NumberType,
+    StringType,
+    BooleanType,
+)
 from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, Union, cast
 
 
@@ -24,12 +30,14 @@ def to_jsonschema_type(from_type: Union[str, Type]) -> dict:
     }
 
     if isinstance(from_type, str):
-        for sqltype, jsonschema_type in sqltype_lookup.items():
-            if sqltype.lower() in from_type.lower():
-                return jsonschema_type
-
-        return sqltype_lookup["string"]  # safe failover to str
-
+        return next(
+            (
+                jsonschema_type
+                for sqltype, jsonschema_type in sqltype_lookup.items()
+                if sqltype.lower() in from_type.lower()
+            ),
+            sqltype_lookup["string"],
+        )
     if from_type is int:
         return sqltype_lookup["int"]
 
